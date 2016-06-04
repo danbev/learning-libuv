@@ -1,8 +1,11 @@
 server: server.c libuv/libuv.la
 	clang -g -o server server.c libuv/.libs/libuv.a -Ilibuv/include
 
-hello: helloworld.c uv/libuv.la
+hello: helloworld.c libuv/libuv.la
 	clang -g -o hello helloworld.c libuv/.libs/libuv.a -Ilibuv/include
+
+tick: tick.cc libuv/libuv.la
+	clang -g -o tick tick.cc libuv/.libs/libuv.a -Ilibuv/include
 
 libuv/libuv.la:
 	$(MAKE) -C libuv
@@ -10,4 +13,4 @@ libuv/libuv.la:
 .PHONY: clean
 
 clean: 
-	rm -f server hello
+	rm -f server hello tick
