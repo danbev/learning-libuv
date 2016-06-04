@@ -1,0 +1,6 @@
+http_parser
+libuv
+*.swp
+*.swo
+server
+*.dSYM
