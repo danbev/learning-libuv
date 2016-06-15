@@ -13,10 +13,13 @@ prepare: prepare.cc libuv/libuv.la
 thread: thread.cc libuv/libuv.la
 	clang -g -o thread thread.cc libuv/.libs/libuv.a -Ilibuv/include
 
+configure: configure.cc libuv/libuv.la
+	clang -g -o configure configure.cc libuv/.libs/libuv.a -Ilibuv/include
+
 libuv/libuv.la:
 	$(MAKE) -C libuv
 
 .PHONY: clean
 
 clean: 
-	rm -f server hello tick prepare thread
+	rm -f server hello tick prepare thread configure
