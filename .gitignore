@@ -6,3 +6,4 @@ server
 *.dSYM
 tick
 tags
+thread

@@ -16,10 +16,10 @@ Next create a copy libuv HEAD:
 
     $ make
 
-## webserver
+## server
 This program is a simple server that will print out what the clients sends it.
 
-    $ ./webserver
+    $ ./server
 
 And in a different terminal:
 
@@ -51,9 +51,9 @@ Taking a look at kqueue.c:41 we find:
        44 
 
 We can see that libuv is calling kqueue which creates a new queue.
-I'm not sure what loo->backend_fd represents yet but this will be set to the file descriptor 
+I'm not sure what loop->backend_fd represents yet but this will be set to the file descriptor 
 returned by kqueue. ioctl is later used to close this file descriptor on exec before returning 
-to the caller.
+to the caller. More about this below
 
 uv__closeexec:
 r = ioctl(fd, set ? FIOCLEX : FIONCLEX);
