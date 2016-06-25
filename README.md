@@ -13,8 +13,10 @@ Next create a copy libuv HEAD:
     $ git archive --prefix="libuv/" HEAD | tar -xvfC /path/to/learning-libuv
 
 ### Building
+Build with debugging symbols:
 
-    $ make
+    $ ./gyp_uv.py -f make
+    $ make -C out
 
 ## server
 This program is a simple server that will print out what the clients sends it.
