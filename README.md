@@ -18,6 +18,15 @@ Build with debugging symbols:
     $ ./gyp_uv.py -f make
     $ make -C out
 
+### Running the tests
+
+    $ ./autoconf.sh
+    $ ./configure
+    $ make check
+
+You might want to add libuv/test/.libs/run-tests to your firewall settings.
+   
+
 ## server
 This program is a simple server that will print out what the clients sends it.
 
