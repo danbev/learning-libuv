@@ -1,30 +1,32 @@
+LIBUV_DIR=../libuv
 LIBUV_BUILD_DIR=../libuv/out/Debug/
+LIBUV_INCLUDE_DIR=$LIBUV_DIR/include
 server: server.c libuv/libuv.la
-	clang -g -o server server.c ${LIBUV_BUILD_DIR}/libuv.a -I${LIBUV_BUILD_DIR}/include
+	clang -g -o server server.c ${LIBUV_BUILD_DIR}/libuv.a -I${LIBUV_INCLUDE_DIR}
 
 hello: helloworld.c libuv/libuv.la
-	clang -g -o hello helloworld.c ${LIBUV_BUILD_DIR}/libuv.a -I${LIBUV_BUILD_DIR}/include
+	clang -g -o $@ $< ${LIBUV_BUILD_DIR}/libuv.a -I${LIBUV_INCLUDE_DIR}
 
-tick: tick.cc libuv/libuv.la
-	clang -g -o tick tick.cc ${LIBUV_BUILD_DIR}/libuv.a -I${LIBUV_BUILD_DIR}/include
+tick: tick.c libuv/libuv.la
+	clang -g -o $@ $< ${LIBUV_BUILD_DIR}/libuv.a -I${LIBUV_INCLUDE_DIR}
 
-prepare: prepare.cc libuv/libuv.la
-	clang -g -o prepare prepare.cc ${LIBUV_BUILD_DIR}/libuv.a -I${LIBUV_BUILD_DIR}/include
+prepare: prepare.c libuv/libuv.la
+	clang -g -o $@ $< ${LIBUV_BUILD_DIR}/libuv.a -I${LIBUV_INCLUDE_DIR}
 
-thread: thread.cc libuv/libuv.la
-	clang -g -o thread thread.cc ${LIBUV_BUILD_DIR}/libuv.a -I${LIBUV_BUILD_DIR}/include
+thread: thread.c libuv/libuv.la
+	clang -g -o $@ $< ${LIBUV_BUILD_DIR}/libuv.a -I${LIBUV_INCLUDE_DIR}
 
-configure: configure.cc libuv/libuv.la
-	clang -g -o configure configure.cc ${LIBUV_BUILD_DIR}/libuv.a -I${LIBUV_BUILD_DIR}/include
+configure: configure.c libuv/libuv.la
+	clang -g -o $@ $< ${LIBUV_BUILD_DIR}/libuv.a -I${LIBUV_INCLUDE_DIR}
 
-idle: idle.cc libuv/libuv.la
-	clang -g -o idle idle.cc ${LIBUV_BUILD_DIR}/libuv.a -I${LIBUV_BUILD_DIR}/include
+idle: idle.c libuv/libuv.la
+	clang -g -o $@ $< ${LIBUV_BUILD_DIR}/libuv.a -I${LIBUV_INCLUDE_DIR}
 
-walk: walk.cc libuv/libuv.la
-	clang -g -o walk walk.cc ${LIBUV_BUILD_DIR}/libuv.a -I${LIBUV_BUILD_DIR}/include
+walk: walk.c libuv/libuv.la
+	clang -g -o $@ $< ${LIBUV_BUILD_DIR}/libuv.a -I${LIBUV_INCLUDE_DIR}
 
 once: once.c libuv/libuv.la
-	clang -g -o once once.c ${LIBUV_BUILD_DIR}/libuv.a -I${LIBUV_BUILD_DIR}/include
+	clang -g -o $@ $< ${LIBUV_BUILD_DIR}/libuv.a -I${LIBUV_INCLUDE_DIR}
 
 libuv/libuv.la:
 	$(MAKE) -C ${LIBUV_BUILD_DIR}

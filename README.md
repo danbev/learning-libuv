@@ -25,6 +25,18 @@ Build with debugging symbols:
     $ make check
 
 You might want to add libuv/test/.libs/run-tests to your firewall settings.
+
+### The event loop
+
+    uv__update_time(loop);
+    uv__run_timers(loop);
+    uv__run_pending(loop); //pending handlers are retuned
+    uv__run_idle(loop); // uv_idle are run at this stage
+    uv__run_prepare(loop); // uv_prepare are run at this stage
+
+    uv__io_poll(loop, timeout);
+    uv__run_check(loop);
+    uv__run_closing_handles(loop);
    
 ### Programs 
 
@@ -37,6 +49,16 @@ And in a different terminal:
 
     $ telnet localhost 7777
 
+
+
+
+## uv_idle and uv_check
+uv_checks are performed after polling for I/O
+
+[idle.cc](./idle.cc) shows and example of using uv_idle and uv_check
+
+    $ lldb idle
+    (lldb) breakpoint set --file idle.c --line 14
 
 ### Internals
 The following are just notes taken while stepping through tick.cc.
