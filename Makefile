@@ -1,8 +1,12 @@
 LIBUV_DIR=../libuv
 LIBUV_BUILD_DIR=../libuv/out/Debug/
 LIBUV_INCLUDE_DIR=$LIBUV_DIR/include
+
 server: server.c libuv/libuv.la
-	clang -g -o server server.c ${LIBUV_BUILD_DIR}/libuv.a -I${LIBUV_INCLUDE_DIR}
+	clang -g -o $@ $< ${LIBUV_BUILD_DIR}/libuv.a -I${LIBUV_INCLUDE_DIR}
+
+client: client.c libuv/libuv.la
+	clang -g -o $@ $< ${LIBUV_BUILD_DIR}/libuv.a -I${LIBUV_INCLUDE_DIR}
 
 hello: helloworld.c libuv/libuv.la
 	clang -g -o $@ $< ${LIBUV_BUILD_DIR}/libuv.a -I${LIBUV_INCLUDE_DIR}
