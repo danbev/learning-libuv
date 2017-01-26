@@ -32,10 +32,13 @@ walk: walk.c libuv/libuv.la
 once: once.c libuv/libuv.la
 	clang -g -o $@ $< ${LIBUV_BUILD_DIR}/libuv.a -I${LIBUV_INCLUDE_DIR}
 
+timer: timer.c libuv/libuv.la
+	clang -g -o $@ $< ${LIBUV_BUILD_DIR}/libuv.a -I${LIBUV_INCLUDE_DIR}
+
 libuv/libuv.la:
 	$(MAKE) -C ${LIBUV_BUILD_DIR}
 
 .PHONY: clean
 
 clean: 
-	rm -f server hello tick prepare thread configure idle walk once
+	rm -f server hello tick prepare thread configure idle walk once timer
