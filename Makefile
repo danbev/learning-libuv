@@ -35,6 +35,9 @@ once: once.c libuv/libuv.la
 timer: timer.c libuv/libuv.la
 	clang -g -o $@ $< ${LIBUV_BUILD_DIR}/libuv.a -I${LIBUV_INCLUDE_DIR}
 
+check: check.c libuv/libuv.la
+	clang -g -o $@ $< ${LIBUV_BUILD_DIR}/libuv.a -I${LIBUV_INCLUDE_DIR}
+
 libuv/libuv.la:
 	$(MAKE) -C ${LIBUV_BUILD_DIR}
 
