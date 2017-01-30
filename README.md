@@ -55,7 +55,7 @@ And in a different terminal:
 ## uv_idle and uv_check
 uv_checks are performed after polling for I/O
 
-[idle.cc](./idle.cc) shows and example of using uv_idle and uv_check
+[idle.cc](./idle.cc) shows and example of using uv_idle. 
 
     $ lldb idle
     (lldb) breakpoint set --file idle.c --line 14
