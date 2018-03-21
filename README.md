@@ -187,7 +187,8 @@ Taking a look at kqueue.c:41 we find:
        43     return -errno;
        44 
 
-We can see that libuv is calling kqueue which creates a new queue. For a standalone kqueue example see [kqueue-example](https://github.com/danbev/learning-c#kqueue-example).
+We can see that libuv is calling kqueue which creates a new queue. For a standalone kqueue example see 
+[kqueue-example](https://github.com/danbev/learning-c/blob/master/kqueue.c).
 
 I'm not sure what loop->backend_fd represents yet but this will be set to the file descriptor 
 returned by kqueue. ioctl is later used to close this file descriptor on exec before returning 
