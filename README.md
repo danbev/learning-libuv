@@ -55,7 +55,7 @@ This type represents operations. These request can use handles, for example a re
 would use a stream handle to do so. But there does not have to be a handle.
 
 ### Network I/O
-
+```
 +------------+ +----------+ +-----------+         
 |  uv_tcp_t  | | uv_pipe_t| | uv_tty_t  |
 +------------+ +----------+ +-----------+
@@ -69,6 +69,7 @@ would use a stream handle to do so. But there does not have to be a handle.
 +------------------------------------------------------------------+
 |               Operating System                                   |
 +------------------------------------------------------------------+
+```
 
 `uv_tcp_t`, `uv_pipe_t`, `uv_tty_t`, `uv_udp_t`, and `uv_poll_t` is what an application uses.
 
@@ -76,6 +77,7 @@ would use a stream handle to do so. But there does not have to be a handle.
 `src/unix/stream.c`.
 
 ### File I/0
+```
 +------------+ +----------+ +-----------------+ +------------------+        
 |  uv_fs_t   | | uv_work_t| | uv_getaddrinfo_t| | uv_getnameinfo_t |
 +------------+ +----------+ +-----------------+ +------------------+
@@ -85,6 +87,7 @@ would use a stream handle to do so. But there does not have to be a handle.
 +------------------------------------------------------------------+
 |                  thread pool                                     |
 +------------------------------------------------------------------+
+```
 
 `uv_fs_t`, `uv_work_t`, `uv_getaddrsinfo_t`, `uv_getnameinfo_t` is what an application uses.
 These all run on a thread pool to perform there operations.
