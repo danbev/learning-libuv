@@ -41,6 +41,28 @@ Libuv provides the following features:
 Libuv uses the best available options for different operating systems to perform operations related to process,
 signal, timer and file descriptor. On Linux epoll is used and on MacOSX kqueue, and on Windows GetQueuedCompletionStatusEx.
 
+### Inheritance in C
+Libuv uses structs to implement inheritance. Here is an non libub [example](https://github.com/danbev/learning-c/blob/master/inherit.c).
+For example, in libuv we have structs that inherit from uv_stream_t, like uv_tcp_t, uv_pipe_t:
+```c
+struct uv_stream_s {
+  UV_HANDLE_FIELDS
+  UV_STREAM_FIELDS
+};
+
+struct uv_tcp_s {
+  UV_HANDLE_FIELDS
+  UV_STREAM_FIELDS
+  UV_TCP_PRIVATE_FIELDS
+};
+
+struct uv_pipe_s {
+  UV_HANDLE_FIELDS
+  UV_STREAM_FIELDS
+  int ipc; /* non-zero if this pipe is used for passing handles */
+  UV_PIPE_PRIVATE_FIELDS
+};
+```
 
 ### uv_loop_t 
 This type is the main object where things happen. It runs in a single thread. If you want more threads you would
