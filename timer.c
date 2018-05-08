@@ -12,7 +12,7 @@ int main() {
 
     uv_timer_t timer;
     uv_timer_init(loop, &timer);
-    uv_timer_start(&timer, timer_callback, 15000, 0);
+    uv_timer_start(&timer, timer_callback, 0, 1000);
 
     uv_run(loop, UV_RUN_DEFAULT);
 
