@@ -38,6 +38,15 @@ timer: timer.c libuv/libuv.la
 check: check.c libuv/libuv.la
 	clang -g -o $@ $< ${LIBUV_BUILD_DIR}/libuv.a -I${LIBUV_INCLUDE_DIR}
 
+tty: tty.c libuv/libuv.la
+	clang -g -o $@ $< ${LIBUV_BUILD_DIR}/libuv.a -I${LIBUV_INCLUDE_DIR}
+
+udp-server: udp-server.c libuv/libuv.la
+	clang -g -o $@ $< ${LIBUV_BUILD_DIR}/libuv.a -I${LIBUV_INCLUDE_DIR}
+
+udp-client: udp-client.c libuv/libuv.la
+	clang -g -o $@ $< ${LIBUV_BUILD_DIR}/libuv.a -I${LIBUV_INCLUDE_DIR}
+
 libuv/libuv.la:
 	$(MAKE) -C ${LIBUV_BUILD_DIR}
 
