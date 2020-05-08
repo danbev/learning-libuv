@@ -1,53 +1,57 @@
 LIBUV_DIR=../libuv
-LIBUV_BUILD_DIR=../libuv/out/Debug/
-LIBUV_INCLUDE_DIR=$LIBUV_DIR/include
+LIBUV_BUILD_DIR=$(LIBUV_DIR)/build
+LIBUV_INCLUDE_DIR=$(LIBUV_DIR)/include
+LIBUV_AR=$(LIBUV_BUILD_DIR)/libuv_a.a
 
-server: server.c libuv/libuv.la
+server: server.c $(LIBUV_AR)
+	clang -g -o $@ $< ${LIBUV_AR} -I${LIBUV_INCLUDE_DIR}
+
+client: client.c $(LIBUV_AR)
+	clang -g -o $@ $< ${LIBUV_AR} -I${LIBUV_INCLUDE_DIR}
+
+hello: helloworld.c $(LIBUV_AR)
+	clang -g -o $@ $< ${LIBUV_AR} -I${LIBUV_INCLUDE_DIR}
+
+tick: tick.c $(LIBUV_AR)
+	clang -g -o $@ $< ${LIBUV_AR} -I${LIBUV_INCLUDE_DIR}
+
+prepare: prepare.c $(LIBUV_AR)
+	clang -g -o $@ $< ${LIBUV_AR} -I${LIBUV_INCLUDE_DIR}
+
+thread: thread.c $(LIBUV_AR)
 	clang -g -o $@ $< ${LIBUV_BUILD_DIR}/libuv.a -I${LIBUV_INCLUDE_DIR}
 
-client: client.c libuv/libuv.la
+configure: configure.c $(LIBUV_AR)
 	clang -g -o $@ $< ${LIBUV_BUILD_DIR}/libuv.a -I${LIBUV_INCLUDE_DIR}
 
-hello: helloworld.c libuv/libuv.la
+idle: idle.c $(LIBUV_AR)
 	clang -g -o $@ $< ${LIBUV_BUILD_DIR}/libuv.a -I${LIBUV_INCLUDE_DIR}
 
-tick: tick.c libuv/libuv.la
+walk: walk.c $(LIBUV_AR)
 	clang -g -o $@ $< ${LIBUV_BUILD_DIR}/libuv.a -I${LIBUV_INCLUDE_DIR}
 
-prepare: prepare.c libuv/libuv.la
+once: once.c $(LIBUV_AR)
 	clang -g -o $@ $< ${LIBUV_BUILD_DIR}/libuv.a -I${LIBUV_INCLUDE_DIR}
 
-thread: thread.c libuv/libuv.la
+timer: timer.c $(LIBUV_AR)
 	clang -g -o $@ $< ${LIBUV_BUILD_DIR}/libuv.a -I${LIBUV_INCLUDE_DIR}
 
-configure: configure.c libuv/libuv.la
+check: check.c $(LIBUV_AR)
 	clang -g -o $@ $< ${LIBUV_BUILD_DIR}/libuv.a -I${LIBUV_INCLUDE_DIR}
 
-idle: idle.c libuv/libuv.la
+tty: tty.c $(LIBUV_AR)
 	clang -g -o $@ $< ${LIBUV_BUILD_DIR}/libuv.a -I${LIBUV_INCLUDE_DIR}
 
-walk: walk.c libuv/libuv.la
+udp-server: udp-server.c $(LIBUV_AR)
 	clang -g -o $@ $< ${LIBUV_BUILD_DIR}/libuv.a -I${LIBUV_INCLUDE_DIR}
 
-once: once.c libuv/libuv.la
+udp-client: udp-client.c $(LIBUV_AR)
 	clang -g -o $@ $< ${LIBUV_BUILD_DIR}/libuv.a -I${LIBUV_INCLUDE_DIR}
 
-timer: timer.c libuv/libuv.la
-	clang -g -o $@ $< ${LIBUV_BUILD_DIR}/libuv.a -I${LIBUV_INCLUDE_DIR}
+work: work.c $(LIBUV_AR)
+	g++ -g -o $@ $< ${LIBUV_AR} -I${LIBUV_INCLUDE_DIR} -lpthread -ldl
 
-check: check.c libuv/libuv.la
-	clang -g -o $@ $< ${LIBUV_BUILD_DIR}/libuv.a -I${LIBUV_INCLUDE_DIR}
-
-tty: tty.c libuv/libuv.la
-	clang -g -o $@ $< ${LIBUV_BUILD_DIR}/libuv.a -I${LIBUV_INCLUDE_DIR}
-
-udp-server: udp-server.c libuv/libuv.la
-	clang -g -o $@ $< ${LIBUV_BUILD_DIR}/libuv.a -I${LIBUV_INCLUDE_DIR}
-
-udp-client: udp-client.c libuv/libuv.la
-	clang -g -o $@ $< ${LIBUV_BUILD_DIR}/libuv.a -I${LIBUV_INCLUDE_DIR}
-
-libuv/libuv.la:
+$(LIBUV_AR):
 	$(MAKE) -C ${LIBUV_BUILD_DIR}
 
 .PHONY: clean
