@@ -4,25 +4,23 @@ The sole purpose of this project is to help understand how libuv works.
 ### Installation
 
 #### Clone and build libuv:
-
+```console
     $ git clone git@github.com:libuv/libuv.git
     $ cd libuv
-
-Next create a copy libuv HEAD:
-
-    $ git archive --prefix="libuv/" HEAD | tar -xvfC /path/to/learning-libuv
+```
 
 ### Building 
 Build with debugging symbols:
-
-    $ ./gyp_uv.py -f make
-    $ make -C out
+```console
+    $ mkdir build && cd build
+    $ cmake -DCMAKE_BUILD_TYPE=Debug
+    $ make
+```
 
 ### Running the tests
-
-    $ ./autoconf.sh
-    $ ./configure
-    $ make check
+```console
+    $ make test
+```
 
 You might want to add libuv/test/.libs/run-tests to your firewall settings.
 
