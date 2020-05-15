@@ -38,11 +38,12 @@ Libuv provides the following features:
 * TTY
 * Threading utilities
 
-Libuv uses the best available options for different operating systems to perform operations related to process,
-signal, timer and file descriptor. On Linux epoll is used and on MacOSX kqueue, and on Windows GetQueuedCompletionStatusEx.
+Libuv uses the best available options for different operating systems to perform
+operations related to process, signal, timer and file descriptors. On Linux
+epoll is used and on MacOSX kqueue, and on Windows GetQueuedCompletionStatusEx.
 
 ### Inheritance in C
-Libuv uses structs to implement inheritance. Here is an non libub [example](https://github.com/danbev/learning-c/blob/master/inherit.c).
+Libuv uses structs to implement inheritance. Here is an non-libuv [example](https://github.com/danbev/learning-c/blob/master/inherit.c).
 For example, in libuv we have structs that inherit from uv_stream_t, like uv_tcp_t, uv_pipe_t:
 ```c
 struct uv_stream_s {
@@ -65,16 +66,18 @@ struct uv_pipe_s {
 ```
 
 ### uv_loop_t 
-This type is the main object where things happen. It runs in a single thread. If you want more threads you would
-run one instance of this type per thread.
+This type is the main object where things happen. It runs in a single thread. If
+you want more threads you would run one instance of this type per thread.
 
 ### uv_handle_t
-This type represents a resource. For example a timer handle would be reponsible for calling a callback
-when the timer expires. Or a tcp handle would be responsible for reading/writing.
+This type represents a resource. For example, a timer handle would be reponsible
+for calling a callback when the timer expires. Or a tcp handle would be
+responsible for reading/writing.
 
 ### uv_request_t
-This type represents operations. These request can use handles, for example a request to write to a stream
-would use a stream handle to do so. But there does not have to be a handle.
+This type represents operations. These request can use handles, for example a
+request to write to a stream would use a stream handle to do so. But there does
+not have to be a handle.
 
 ### Network I/O
 ```
@@ -93,10 +96,11 @@ would use a stream handle to do so. But there does not have to be a handle.
 +------------------------------------------------------------------+
 ```
 
-`uv_tcp_t`, `uv_pipe_t`, `uv_tty_t`, `uv_udp_t`, and `uv_poll_t` is what an application uses.
+`uv_tcp_t`, `uv_pipe_t`, `uv_tty_t`, `uv_udp_t`, and `uv_poll_t` is what an
+application uses.
 
-`uv_tcp_t`, `uv_pipe_t`, `uv_tty_t` are all streams. The common functionality for these can be found in
-`src/unix/stream.c`.
+`uv_tcp_t`, `uv_pipe_t`, `uv_tty_t` are all streams. The common functionality
+for these can be found in `src/unix/stream.c`.
 
 ### File I/0
 ```
@@ -111,18 +115,19 @@ would use a stream handle to do so. But there does not have to be a handle.
 +------------------------------------------------------------------+
 ```
 
-`uv_fs_t`, `uv_work_t`, `uv_getaddrsinfo_t`, `uv_getnameinfo_t` is what an application uses.
-These all run on a thread pool to perform there operations.
+`uv_fs_t`, `uv_work_t`, `uv_getaddrsinfo_t`, `uv_getnameinfo_t` is what an
+application uses.  These all run on a thread pool to perform there operations.
 The thread pool is only used for file I/0 and for getaddrinfo!
 The default size of the thread pool is 4 (uv_threadpool_size). 
-Just to be clear, the libuv Event Loop is single threaded. The thread pool is used for file I/O operations.
+Just to be clear, the libuv Event Loop is single threaded. The thread pool is
+used for file I/O operations.
 
 http://blog.libtorrent.org/2012/10/asynchronous-disk-io/
 
 
 #### Kqueue (Kernel Queues)
-Kqueue is a mechanism for registering and responding to process, signal, timer, and file descriptor
-events in the kernel.
+Kqueue is a mechanism for registering and responding to process, signal, timer,
+and file descriptor events in the kernel.
 
 To see how libuv utilizes kqueue you can look in `src/unix/darwin.c`
 
@@ -137,7 +142,7 @@ Uses the system resolver library and makes blocking socket calls.
 ### The event loop
 
 For macosx the event loop source can be found in `src/unix/core.c`
-
+```c
     uv__update_time(loop);
     uv__run_timers(loop);
     uv__run_pending(loop); //pending handlers are retuned
@@ -147,33 +152,35 @@ For macosx the event loop source can be found in `src/unix/core.c`
     uv__io_poll(loop, timeout);
     uv__run_check(loop);
     uv__run_closing_handles(loop);
+```
    
 ### Programs 
 
 ## server
 This program is a simple server that will print out what the clients sends it.
-
+```console
     $ ./server
+```
 
 And in a different terminal:
-
+```console
     $ telnet localhost 7777
-
+```
 
 ## uv_idle and uv_check
-uv_checks are performed after polling for I/O
+uv_checks are performed after polling for I/O.
 
 [idle.cc](./idle.cc) shows and example of using uv_idle. 
-
+```console
     $ lldb idle
     (lldb) br s -f idle.c -l 14
+```
 
 ### Internals
 The following are just notes taken while stepping through tick.cc.
 
-
 ### uv_loop_t
-
+```c
     struct uv_loop_s {
       /* User data - use this for whatever. */
       void* data;
@@ -184,12 +191,13 @@ The following are just notes taken while stepping through tick.cc.
       /* Internal flag to signal loop stop. */
       unsigned int stop_flag;
       UV_LOOP_PRIVATE_FIELDS
+```
 };
 
 UV_LOOP_PRIVATE_FIELDS can be found in include/uv-unix.h.
 
 #### uv_default_loop
-
+```console
     27     uv_loop_t* loop = uv_default_loop();
 
     (lldb) bt
@@ -208,13 +216,15 @@ Taking a look at kqueue.c:41 we find:
        42   if (loop->backend_fd == -1)
        43     return -errno;
        44 
+```
 
-We can see that libuv is calling kqueue which creates a new queue. For a standalone kqueue example see 
+We can see that libuv is calling kqueue which creates a new queue. For a
+standalone kqueue example see 
 [kqueue-example](https://github.com/danbev/learning-c/blob/master/kqueue.c).
 
-I'm not sure what loop->backend_fd represents yet but this will be set to the file descriptor 
-returned by kqueue. ioctl is later used to close this file descriptor on exec before returning 
-to the caller. More about this below
+I'm not sure what loop->backend_fd represents yet but this will be set to the
+file descriptor returned by kqueue. ioctl is later used to close this file
+descriptor on exec before returning to the caller. More about this below
 
 uv__closeexec:
 
