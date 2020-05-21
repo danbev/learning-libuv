@@ -37,7 +37,10 @@ timer: timer.c $(LIBUV_AR)
 	clang -g -o $@ $< ${LIBUV_BUILD_DIR}/libuv.a -I${LIBUV_INCLUDE_DIR}
 
 check: check.c $(LIBUV_AR)
-	clang -g -o $@ $< ${LIBUV_BUILD_DIR}/libuv.a -I${LIBUV_INCLUDE_DIR}
+	g++ -g -o $@ $< ${LIBUV_AR} -I${LIBUV_INCLUDE_DIR} -lpthread -ldl
+
+queue: queue.c $(LIBUV_AR)
+	gcc -Wall -g -O0 -o $@ $< ${LIBUV_AR} -I${LIBUV_INCLUDE_DIR} -lpthread -ldl
 
 tty: tty.c $(LIBUV_AR)
 	clang -g -o $@ $< ${LIBUV_BUILD_DIR}/libuv.a -I${LIBUV_INCLUDE_DIR}
