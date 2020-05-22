@@ -77,6 +77,240 @@ This type represents operations. These request can use handles, for example a
 request to write to a stream would use a stream handle to do so. But there does
 not have to be a handle.
 
+### init
+
+```c
+  uv_loop_t* loop = uv_default_loop();
+  uv_loop_init(loop);
+```
+In `src/unix/loop.c` we have:
+```c
+int uv_loop_init(uv_loop_t* loop) {
+  ...
+  QUEUE_INIT(&loop->wq);
+  ...
+}
+```
+Notice that the address of loop->wq is being passed into the macro (src/queue.h)
+as its sole argument. And `wq` is defined as:
+```c
+void* wq[2];
+```
+So `wq` is an array with two elements which are of type pointer to void. So,
+they can contain any pointer but will need to be casted to the correct type when
+used.
+```c
+#define QUEUE_INIT(q)                                                         \
+  do {
+    QUEUE_NEXT(q) = (q);
+    QUEUE_PREV(q) = (q);
+  }
+```
+So `QUEUE_NEXT` would be expanded to:
+```c
+QUEUE_NEXT(&loop->wq) = (&loop->wq);
+```
+And `QUEUE_NEXT` looks like this:
+```c
+#define QUEUE_NEXT(q)               (*(QUEUE **) &((*(q))[0]))
+```
+And if we replace q with the passed in argument `&loop->wp` we get:
+```c
+#define QUEUE_NEXT(&loop->wp)       (*(QUEUE **) &((*(&loop->wp))[0]))
+```
+So the first line of the `QUEUE_INIT` macro will become:
+```c
+    (*(QUEUE **) &((*(&loop->wq))[0])) = &loop->wp;
+```
+First, the we dereferece the passed-in `&loop->wp` which gives the address of
+the array.
+```c
+    (*(QUEUE **) &(loop->wq[0])) = &loop->wp;
+```
+Now, `&(loop->wq[0]) is the address of first member of the array and this
+will be of type `void*`, and we are getting the address of that:
+```c
+  auto first = &((*(&s))[0]);
+(lldb) expr first
+(void ** ) $0 = 0x00007fffffffd1d0
+```
+We are then casting that to QUEUE** and then dereferencing.
+I'm not understading the reason for this cast. If the `first` above is already
+of type void** the additional task does nothing. I'm probably missing something
+here, but there is an example in [queue.c](./queue.c) that tries to sort
+this out.
+
+```c
+  QUEUE q = {NULL, NULL};
+  QUEUE_INIT(&q);
+```
+```console
+(lldb) expr q
+(QUEUE) $0 = ([0] = 0x0000000000000000, [1] = 0x0000000000000000)
+(lldb) s
+(lldb) expr q
+(QUEUE) $1 = ([0] = 0x00007fffffffd190, [1] = 0x00007fffffffd190)
+(lldb) expr &q
+(QUEUE *) $2 = 0x00007fffffffd190
+```
+Notice that both entries are set to the address of of `q`.
+Next, we insert two elements into the queue:
+```c
+  QUEUE_INSERT_TAIL(&q, &fletch.wp);
+  QUEUE_INSERT_TAIL(&q, &rosen.wp);
+```
+```console
+(lldb) expr q
+(QUEUE) $4 = ([0] = 0x00007fffffffd180, [1] = 0x00007fffffffd180)
+(lldb) s
+(lldb) expr q
+(QUEUE) $5 = ([0] = 0x00007fffffffd180, [1] = 0x00007fffffffd160)
+(lldb) expr &fletch.wp
+(void *(*)[2]) $9 = 0x00007fffffffd180
+(lldb) expr &rosen.wp
+(void *(*)[2]) $10 = 0x00007fffffffd160
+```
+Notice that the struct has a queue memember (or in this cast just a member
+of type void* wt[2].
+
+
+To initialize a handle there is a common pattern. For example, if we look
+at the [check](./check.c) example we find:
+```c
+  uv_loop_t* loop = uv_default_loop();
+  uv_loop_init(loop);
+  uv_check_t check;
+  uv_check_init(loop, &check);
+```
+What does `uv_check_init` actually do?  
+We have to look in `src/unix/loop-watcher.c
+```c
+UV_LOOP_WATCHER_DEFINE(check, CHECK)
+```
+Now, the `UV_LOOP_WATCHER_DEFINE` macro is defined in the same file:
+```c
+int uv_check_init(uv_loop_t* loop, uv_check_t* handle) {
+    uv__handle_init(loop, (uv_handle_t*)handle, UV_CHECK);
+    handle->check_cb = NULL;
+    return 0;
+}
+```
+So that looks simple enough, but we need to keep in mind that `uv__handle_init`
+is also a macro which is defined in `src/uv-common.h`.
+```c
+#define uv__handle_init(loop_, h, type_)                                      \
+  do {                                                                        \
+    (h)->loop = (loop_);                                                      \
+    (h)->type = (type_);                                                      \
+    (h)->flags = UV_HANDLE_REF;  /* Ref the loop when active. */              \
+    QUEUE_INSERT_TAIL(&(loop_)->handle_queue, &(h)->handle_queue);            \
+    uv__handle_platform_init(h);
+  }
+  while (0)
+```
+And `QUEUE_INSERT_TAIL` is also a macro (can be found in `src/queue.h`):
+```c
+#define QUEUE_INSERT_TAIL(h, q)                                               \
+  do {                                                                        \
+    QUEUE_NEXT(q) = (h);                                                      \
+    QUEUE_PREV(q) = QUEUE_PREV(h);                                            \
+    QUEUE_PREV_NEXT(q) = (q);                                                 \
+    QUEUE_PREV(h) = (q);                                                      \
+  }                                                                           \
+  while (0)
+```
+Notice that `h` is the *(loop_)->handle_queue, and that `q` is the &(h)->handle_queue.
+
+Lets first take a look at `QUEUE_NEXT(h)` and see what it looks like:
+```c
+#define QUEUE_NEXT(q)       (*(QUEUE **) &((*(q))[0])) = (h);
+```
+Which will expand to:
+```c
+(*(QUEUE **) &((*(&((uv_handle_t*)handle)->handle_queue))[0])) = (&(loop)->handle_queue);
+
+(*(QUEUE **) &(( value_of_handle_queue[0] ))) = (&(loop)->handle_queue);
+(*(QUEUE **) &(value_of_handle_queue[0])) = (&(loop)->handle_queue);
+(*(QUEUE **) address_value_of_handle_queue[0]) = (&(loop)->handle_queue);
+(* (QUEUE **) address_value_of_handle_queue[0]) = (&(loop)->handle_queue);
+(defref value as (QUEUE **) = (&(loop)->handle_queue);
+```
+```c
+  (uv_handle_t*)handle)->handle_queue
+```
+The cast is there because the what is passed to the macro is:
+```c
+    uv__handle_init(loop, (uv_handle_t*)handle, UV_CHECK);
+```
+And the the preprocessor just does a substition so call usages of the `h` parameter
+will be (uv_handle_t*)handle. And it then dereferences the `handle_queue`. 
+The handle_queue is defined in 'UV_HANDLE_FIELDS` as:
+```c
+  void* handle_queue[2];
+```
+TODO: add details about the queue and that they are members of a struct...
+Next,
+```c
+  &((uv_handle_t*)handle)->handle_queue))[0])
+  &((*(&((uv_handle_t*)handle)->handle_queue))[0])
+```
+
+We can see the complete function expanded by the preprocesor using the following
+command:
+```console
+$ gcc -I./include -I./src -E src/unix/loop-watcher.c
+``` 
+```c
+int uv_check_init(uv_loop_t* loop, uv_check_t* handle) {
+  do {
+    ((uv_handle_t*)handle)->loop = (loop);
+    ((uv_handle_t*)handle)->type = (UV_CHECK);
+    ((uv_handle_t*)handle)->flags = UV_HANDLE_REF;
+    do {
+      (*(QUEUE **) &((*(&((uv_handle_t*)handle)->handle_queue))[0])) = (&(loop)->handle_queue);
+      (*(QUEUE **) &((*(&((uv_handle_t*)handle)->handle_queue))[1])) = (*(QUEUE **) &((*(&(loop)->handle_queue))[1]));
+      ((*(QUEUE **) &((*((*(QUEUE **) &((*(&((uv_handle_t*)handle)->handle_queue))[1]))))[0]))) = (&((uv_handle_t*)handle)->handle_queue);
+      (*(QUEUE **) &((*(&(loop)->handle_queue))[1])) = (&((uv_handle_t*)handle)->handle_queue);
+    } while (0);
+    (((uv_handle_t*)handle)->next_closing = ((void *)0);
+  } while (0);
+  handle->check_cb = ((void *)0);
+  return 0;
+}
+```
+
+```c
+struct uv_loop_s {
+  /* User data - use this for whatever. */
+  void* data;
+  /* Loop reference counting. */
+  unsigned int active_handles;
+  void* handle_queue[2];
+  union {
+    void* unused[2];
+    unsigned int count;
+  } active_reqs;
+  /* Internal flag to signal loop stop. */
+  unsigned int stop_flag;
+  UV_LOOP_PRIVATE_FIELDS
+};
+
+#define UV_HANDLE_FIELDS                                                      \
+  /* public */                                                                \
+  void* data;                                                                 \
+  /* read-only */                                                             \
+  uv_loop_t* loop;                                                            \
+  uv_handle_type type;                                                        \
+  /* private */                                                               \
+  uv_close_cb close_cb;                                                       \
+  void* handle_queue[2];                                                      \
+  union {                                                                     \
+    int fd;                                                                   \
+    void* reserved[4];                                                        \
+  } u;                                                                        \
+  UV_HANDLE_PRIVATE_FIELDS
+```
+
 ### Network I/O
 ```
 +------------+ +----------+ +-----------+         
