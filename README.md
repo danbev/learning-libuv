@@ -9,11 +9,11 @@ The sole purpose of this project is to help understand how libuv works.
     $ cd libuv
 ```
 
-### Building 
+### Building libuv
 Build with debugging symbols:
 ```console
     $ mkdir build && cd build
-    $ cmake -DCMAKE_BUILD_TYPE=Debug
+    $ cmake -DCMAKE_BUILD_TYPE=Debug ..
     $ make
 ```
 
