@@ -17,9 +17,20 @@ Build with debugging symbols:
     $ make
 ```
 
-### Running the tests
+### Building executables
+The make target names match the source files but with out the suffix.
+So to compile `check.c` use:
 ```console
-    $ make test
+$ make check
+```
+And the run the executable:
+```console
+$ ./check
+```
+
+And you can set through using:
+```console
+$ lldb ./check
 ```
 
 You might want to add libuv/test/.libs/run-tests to your firewall settings.
