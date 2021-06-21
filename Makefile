@@ -54,6 +54,9 @@ udp-client: udp-client.c $(LIBUV_AR)
 work: work.c $(LIBUV_AR)
 	g++ -g -o $@ $< ${LIBUV_AR} -I${LIBUV_INCLUDE_DIR} -lpthread -ldl
 
+addressinfo: addressinfo.c $(LIBUV_AR)
+	${CC} -g -o $@ $< ${LIBUV_AR} -I${LIBUV_INCLUDE_DIR} -lpthread -ldl
+
 $(LIBUV_AR):
 	$(MAKE) -C ${LIBUV_BUILD_DIR}
 
