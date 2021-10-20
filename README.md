@@ -149,7 +149,9 @@ We are then casting that to QUEUE** and then dereferencing.
 I'm not understading the reason for this cast. If the `first` above is already
 of type void** the additional task does nothing. I'm probably missing something
 here, but there is an example in [queue.c](./queue.c) that tries to sort
-this out.
+this out. It also show an example usage of QUEUE which should shed some light
+on why these two element arrays are used. The are a member of a struct and the
+first entry points to the next element in the queue, and the second the previous.
 
 ```c
   QUEUE q = {NULL, NULL};
@@ -167,8 +169,8 @@ this out.
 Notice that both entries are set to the address of of `q`.
 Next, we insert two elements into the queue:
 ```c
-  QUEUE_INSERT_TAIL(&q, &fletch.wp);
-  QUEUE_INSERT_TAIL(&q, &rosen.wp);
+  QUEUE_INSERT_TAIL(&q, &loop.wp);
+  QUEUE_INSERT_TAIL(&q, &loop.wp);
 ```
 ```console
 (lldb) expr q
@@ -181,9 +183,8 @@ Next, we insert two elements into the queue:
 (lldb) expr &rosen.wp
 (void *(*)[2]) $10 = 0x00007fffffffd160
 ```
-Notice that the struct has a queue memember (or in this cast just a member
+Notice that the struct has a queue memmber (or in this case just a member
 of type void* wt[2].
-
 
 To initialize a handle there is a common pattern. For example, if we look
 at the [check](./check.c) example we find:
@@ -194,7 +195,7 @@ at the [check](./check.c) example we find:
   uv_check_init(loop, &check);
 ```
 What does `uv_check_init` actually do?  
-We have to look in `src/unix/loop-watcher.c
+We have to look in `src/unix/loop-watcher.c`:
 ```c
 UV_LOOP_WATCHER_DEFINE(check, CHECK)
 ```
@@ -232,34 +233,69 @@ And `QUEUE_INSERT_TAIL` is also a macro (can be found in `src/queue.h`):
 ```
 Notice that `h` is the *(loop_)->handle_queue, and that `q` is the &(h)->handle_queue.
 
-Lets first take a look at `QUEUE_NEXT(h)` and see what it looks like:
+### loop init
+First, lets just take a look at the loop struct as a reference:
 ```c
-#define QUEUE_NEXT(q)       (*(QUEUE **) &((*(q))[0])) = (h);
+struct uv_loop_s {                                                                 
+  /* User data - use this for whatever. */                                         
+  void* data;                                                                      
+  /* Loop reference counting. */                                                   
+  unsigned int active_handles;                                                     
+  void* handle_queue[2];                                                           
+  union {                                                                          
+    void* unused[2];                                                               
+    unsigned int count;                                                            
+  } active_reqs;                                                                   
+  /* Internal flag to signal loop stop. */                                         
+  unsigned int stop_flag;                                                          
+  unsigned long flags;                                                        \
+  int backend_fd;                                                             \
+  void* pending_queue[2];                                                     \
+  void* watcher_queue[2];                                                     \
+  uv__io_t** watchers;                                                        \
+  unsigned int nwatchers;                                                     \
+  unsigned int nfds;                                                          \
+  void* wq[2];                                                                \
+  uv_mutex_t wq_mutex;                                                        \
+  uv_async_t wq_async;                                                        \
+  uv_rwlock_t cloexec_lock;                                                   \
+  uv_handle_t* closing_handles;                                               \
+  void* process_handles[2];                                                   \
+  void* prepare_handles[2];                                                   \
+  void* check_handles[2];                                                     \
+  void* idle_handles[2];                                                      \
+  void* async_handles[2];                                                     \
+  void (*async_unused)(void);  /* TODO(bnoordhuis) Remove in libuv v2. */     \
+  uv__io_t async_io_watcher;                                                  \
+  int async_wfd;                                                              \
+  struct {                                                                    \
+    void* min;                                                                \
+    unsigned int nelts;                                                       \
+  } timer_heap;                                                               \
+  uint64_t timer_counter;                                                     \
+  uint64_t time;                                                              \
+  int signal_pipefd[2];                                                       \
+  uv__io_t signal_io_watcher;                                                 \
+  uv_signal_t child_watcher;                                                  \
+  int emfile_fd;                                                              \
+  UV_PLATFORM_LOOP_FIELDS                                                     \
+}
 ```
-Which will expand to:
+When using the default loop a reference to a struct of type uv_loop_s is passed
+in to `uv_loop_init`.
 ```c
-(*(QUEUE **) &((*(&((uv_handle_t*)handle)->handle_queue))[0])) = (&(loop)->handle_queue);
+  heap_init((struct heap*) &loop->timer_heap);
+  QUEUE_INIT(&loop->wq);
+  QUEUE_INIT(&loop->idle_handles);
+  QUEUE_INIT(&loop->async_handles);
+  QUEUE_INIT(&loop->check_handles);
+  QUEUE_INIT(&loop->prepare_handles);
+  QUEUE_INIT(&loop->handle_queue);
+```
 
-(*(QUEUE **) &(( value_of_handle_queue[0] ))) = (&(loop)->handle_queue);
-(*(QUEUE **) &(value_of_handle_queue[0])) = (&(loop)->handle_queue);
-(*(QUEUE **) address_value_of_handle_queue[0]) = (&(loop)->handle_queue);
-(* (QUEUE **) address_value_of_handle_queue[0]) = (&(loop)->handle_queue);
-(defref value as (QUEUE **) = (&(loop)->handle_queue);
-```
-```c
-  (uv_handle_t*)handle)->handle_queue
-```
-The cast is there because the what is passed to the macro is:
-```c
-    uv__handle_init(loop, (uv_handle_t*)handle, UV_CHECK);
-```
-And the the preprocessor just does a substition so call usages of the `h` parameter
-will be (uv_handle_t*)handle. And it then dereferences the `handle_queue`. 
-The handle_queue is defined in 'UV_HANDLE_FIELDS` as:
-```c
-  void* handle_queue[2];
-```
-TODO: add details about the queue and that they are members of a struct...
+
+
+
 Next,
 ```c
   &((uv_handle_t*)handle)->handle_queue))[0])
@@ -500,3 +536,14 @@ bytes. Anything writting to the pipe will be left there until something reads fr
 become full and block)
 
 Normally a pipe is shared with subprocesses but a that is not the case with a shared pipe, it is not shared.
+
+### uv.h
+The following can be found in uv.h:
+```c
+#if defined(_WIN32)
+# include "uv/win.h"
+#else
+# include "uv/unix.h"
+#endif
+```
+And `unix.h` can be found in `include/uv/unix.h`.
